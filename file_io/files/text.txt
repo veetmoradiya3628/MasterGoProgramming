@@ -1,0 +1,1 @@
+Welcome to Go Programming language!, lots of love for go
