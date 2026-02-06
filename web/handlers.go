@@ -20,7 +20,8 @@ var htmlContent = `
 </html>
 `
 
-func home(w http.ResponseWriter, r *http.Request) {
+func (app *application) home(w http.ResponseWriter, r *http.Request) {
+	app.infoLog.Printf("Received request for %s", r.URL.Path)
 	title := "Welcome to the Home Page"
 	header := "Hello, World!"
 	paragraph := "This is a simple web server built with Go."
@@ -29,7 +30,7 @@ func home(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(content))
 }
 
-func about(w http.ResponseWriter, r *http.Request) {
+func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	title := "About Us"
 	header := "About Our Company"
 	paragraph := "We are a leading company in the tech industry, providing innovative solutions to our clients."
@@ -38,7 +39,7 @@ func about(w http.ResponseWriter, r *http.Request) {
 	w.Write([]byte(content))
 }
 
-func contact(w http.ResponseWriter, r *http.Request) {
+func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 	title := "Contact Us"
 	header := "Get in Touch"
 	paragraph := "Feel free to reach out to us via email at xyz@gmail.com"

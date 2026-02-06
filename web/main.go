@@ -1,14 +1,48 @@
 package main
 
-import "net/http"
+import (
+	"database/sql"
+	"log"
+	"net/http"
+	"os"
+)
+
+// application holds the dependencies for our web application, such as loggers and the user repository.
+type application struct {
+	errorLog *log.Logger
+	infoLog  *log.Logger
+	userRepo UserRepository
+	mux      *http.ServeMux
+}
 
 func main() {
 	mux := http.NewServeMux()
-	mux.HandleFunc("/", home)
-	mux.HandleFunc("/about", about)
-	mux.HandleFunc("/contact", contact)
-
-	if err := http.ListenAndServe(":8080", mux); err != nil {
-		panic(err)
+	db, err := connectToDatabase("users_database.db")
+	if err != nil {
+		log.Fatal(err)
 	}
+
+	app := &application{
+		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
+		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
+		userRepo: NewSQLUserRepository(db),
+	}
+	log.Println("Listening on :8080")
+	app.mount(mux)
+	if err := app.serve(); err != nil {
+		log.Fatal(err)
+	}
+}
+
+// connectToDatabase establishes a connection to the SQLite database and returns the database handle.
+func connectToDatabase(dbName string) (*sql.DB, error) {
+	db, err := sql.Open("sqlite3", dbName)
+	if err != nil {
+		return nil, err
+	}
+	err = db.Ping()
+	if err != nil {
+		return nil, err
+	}
+	return db, nil
 }
