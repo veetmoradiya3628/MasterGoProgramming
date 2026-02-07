@@ -3,32 +3,33 @@ package main
 import (
 	"database/sql"
 	"log"
-	"net/http"
 	"os"
 )
 
 // application holds the dependencies for our web application, such as loggers and the user repository.
 type application struct {
-	errorLog *log.Logger
-	infoLog  *log.Logger
-	userRepo UserRepository
-	mux      *http.ServeMux
+	errorLog    *log.Logger
+	infoLog     *log.Logger
+	userRepo    UserRepository
+	templateDir string
+	tp          *TemplateRenderer
 }
 
 func main() {
-	mux := http.NewServeMux()
 	db, err := connectToDatabase("users_database.db")
 	if err != nil {
 		log.Fatal(err)
 	}
 
 	app := &application{
-		errorLog: log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
-		infoLog:  log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
-		userRepo: NewSQLUserRepository(db),
+		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
+		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
+		userRepo:    NewSQLUserRepository(db),
+		templateDir: "./templates",
 	}
+	app.tp = NewTemplateRenderer(app.templateDir, false) // 2nd parameter isDev is for running in localdevf
+
 	log.Println("Listening on :8080")
-	app.mount(mux)
 	if err := app.serve(); err != nil {
 		log.Fatal(err)
 	}

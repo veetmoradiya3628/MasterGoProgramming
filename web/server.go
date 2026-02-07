@@ -1,18 +1,14 @@
 package main
 
 import (
-	"errors"
 	"net/http"
 )
 
 func (app *application) serve() error {
-	if app.mux == nil {
-		return errors.New("mux is not initialized")
+	srv := &http.Server{
+		Addr:    ":8080",
+		Handler: app.routes(),
+		// ReadTimeout: 2 * time.Second, // Set a read timeout to prevent slow clients from hanging the server
 	}
-	return http.ListenAndServe(":8080", app.mux)
-}
-
-func (app *application) mount(mux *http.ServeMux) {
-	app.mux = mux
-	app.mux.HandleFunc("/", app.home)
+	return srv.ListenAndServe()
 }
