@@ -3,7 +3,11 @@ package main
 import (
 	"database/sql"
 	"log"
+	"net/http"
 	"os"
+	"time"
+
+	"github.com/golangcollege/sessions"
 )
 
 // application holds the dependencies for our web application, such as loggers and the user repository.
@@ -14,6 +18,7 @@ type application struct {
 	templateDir string
 	publicPath  string
 	tp          *TemplateRenderer
+	session     *sessions.Session
 }
 
 func main() {
@@ -21,6 +26,12 @@ func main() {
 	if err != nil {
 		log.Fatal(err)
 	}
+	defer db.Close()
+
+	session := sessions.New([]byte("u46IpCV9y5Vlur8YvODJEhgOY8m9JVE4"))
+	session.Lifetime = 24 * time.Hour
+	session.Secure = true
+	session.SameSite = http.SameSiteLaxMode
 
 	app := &application{
 		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
@@ -28,6 +39,7 @@ func main() {
 		userRepo:    NewSQLUserRepository(db),
 		templateDir: "./templates",
 		publicPath:  "./public",
+		session:     session,
 	}
 	app.tp = NewTemplateRenderer(app.templateDir, false) // 2nd parameter isDev is for running in localdevf
 
