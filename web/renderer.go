@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"html/template"
 	"net/http"
 	"path"
@@ -29,20 +30,21 @@ func (t *TemplateRenderer) Render(w http.ResponseWriter, templateName string, da
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
-	err = tmpl.Execute(w, data)
+	err = tmpl.ExecuteTemplate(w, "base.html", data)
 	if err != nil {
+		fmt.Println("Error", err)
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 	}
 }
 
 func (t *TemplateRenderer) getTemplate(templateName string) (*template.Template, error) {
 	if !t.dev {
-		t.mutex.Lock()
+		t.mutex.RLock()
 		if tmpl, ok := t.cache[templateName]; ok {
-			t.mutex.Unlock()
+			t.mutex.RUnlock()
 			return tmpl, nil
 		}
-		t.mutex.Unlock()
+		t.mutex.RUnlock()
 	}
 	tmpl, err := t.parseTemplate(templateName)
 	if err != nil {

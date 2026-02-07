@@ -1,13 +1,33 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Title</title>
-</head>
-<body>
-    <h1>Home page for template</h1>
-    <p>Welcome to our simple blog</p>
-    <p>Dev</p>
-</body>
-</html>
+{{define "content"}}
+<div class="container">
+
+  <div class="posts-list">
+    {{with .Posts}}
+    {{range .}}
+    <div class="post-item">
+      <div class="post-content">
+        <div class="post-title">
+          <a href="{{.URL}}" class="post-link" target="_blank">{{.Title}}</a>
+          <span class="post-domain">{{.Host}}</span>
+
+          <a href="#" class="post-link">{{.UserName}}</a>
+        </div>
+        <div class="post-meta">
+          <a href="/vote?post_id={{.ID}}" class="author"> <span class="points">{{.GetVoteCountsHuman}}</span></a>|
+          <span class="time">{{.CreatedAtHuman}}</span>
+          | <a href="/comments?post_id={{.ID}}" class="comments-link">{{.GetCommentCountsHuman}}</a>
+        </div>
+      </div>
+    </div>
+    {{end}}
+
+    {{end}}
+  </div>
+
+  <div class="pagination">
+    <a href="/?page=1" class="more-link">Prev</a>
+    <a href="/?page=1" class="more-link">Next</a>
+  </div>
+
+</div>
+{{end}}

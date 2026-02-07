@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/http"
 )
 
@@ -25,22 +24,22 @@ func (app *application) home(w http.ResponseWriter, r *http.Request) {
 	app.render(w, "index.html", nil)
 }
 
+func (app *application) login(w http.ResponseWriter, r *http.Request) {
+	app.infoLog.Printf("Received request for %s", r.URL.Path)
+	app.render(w, "login.html", nil)
+}
+
+func (app *application) register(w http.ResponseWriter, r *http.Request) {
+	app.infoLog.Printf("Received request for %s", r.URL.Path)
+	app.render(w, "register.html", nil)
+}
+
 func (app *application) about(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Printf("Received request for %s", r.URL.Path)
-	title := "About Us"
-	header := "About Our Company"
-	paragraph := "We are a leading company in the tech industry, providing innovative solutions to our clients."
-	content := fmt.Sprintf(htmlContent, title, header, paragraph)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(content))
+	app.render(w, "about.html", nil)
 }
 
 func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Printf("Received request for %s", r.URL.Path)
-	title := "Contact Us"
-	header := "Get in Touch"
-	paragraph := "Feel free to reach out to us via email at xyz@gmail.com"
-	content := fmt.Sprintf(htmlContent, title, header, paragraph)
-	w.Header().Set("Content-Type", "text/html")
-	w.Write([]byte(content))
+	app.render(w, "contact.html", nil)
 }

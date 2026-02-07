@@ -12,6 +12,7 @@ type application struct {
 	infoLog     *log.Logger
 	userRepo    UserRepository
 	templateDir string
+	publicPath  string
 	tp          *TemplateRenderer
 }
 
@@ -26,6 +27,7 @@ func main() {
 		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
 		userRepo:    NewSQLUserRepository(db),
 		templateDir: "./templates",
+		publicPath:  "./public",
 	}
 	app.tp = NewTemplateRenderer(app.templateDir, false) // 2nd parameter isDev is for running in localdevf
 
