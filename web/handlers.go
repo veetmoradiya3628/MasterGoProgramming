@@ -32,7 +32,8 @@ func (app *application) login(w http.ResponseWriter, r *http.Request) {
 		form.Required("email", "password").
 			MaxLength("email", 255).
 			MaxLength("password", 255).
-			MinLength("email", 3)
+			MinLength("email", 3).
+			IsEmail("email")
 
 		if !form.Valid() {
 			app.errorLog.Printf("Invalid form: %+v", form.Errors)
@@ -84,7 +85,8 @@ func (app *application) register(w http.ResponseWriter, r *http.Request) {
 			MaxLength("password", 255).
 			MinLength("password", 3).
 			MinLength("name", 3).
-			MinLength("email", 3)
+			MinLength("email", 3).
+			IsEmail("email")
 
 		if !form.Valid() {
 			app.errorLog.Printf("Invalid form: %+v", form.Errors)
