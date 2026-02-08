@@ -1,6 +1,9 @@
 package main
 
 import (
+	"context"
+	"database/sql"
+	"errors"
 	"fmt"
 	"net/http"
 )
@@ -47,4 +50,26 @@ func (app *application) isAuthenticated(r *http.Request) bool {
 		return false
 	}
 	return isAuth
+}
+
+func (app *application) authenticate(next http.Handler) http.Handler {
+	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		exists := app.session.Exists(r, loggedInUserKey)
+		if !exists {
+			next.ServeHTTP(w, r)
+			return
+		}
+
+		_, err := app.userRepo.GetUserByEmail(app.session.GetString(r, loggedInUserKey))
+		if errors.Is(err, sql.ErrNoRows) {
+			app.session.Remove(r, loggedInUserKey)
+			next.ServeHTTP(w, r)
+			return
+		} else if err != nil {
+			app.serverError(w, err)
+			return
+		}
+		ctx := context.WithValue(r.Context(), contextAuthKey, true)
+		next.ServeHTTP(w, r.WithContext(ctx))
+	})
 }
