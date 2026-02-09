@@ -15,6 +15,7 @@ type application struct {
 	errorLog    *log.Logger
 	infoLog     *log.Logger
 	userRepo    UserRepository
+	postRepo    PostRepository
 	templateDir string
 	publicPath  string
 	tp          *TemplateRenderer
@@ -37,16 +38,28 @@ func main() {
 		errorLog:    log.New(os.Stderr, "ERROR\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
 		infoLog:     log.New(os.Stdout, "INFO\t", log.Ldate|log.Ltime|log.LUTC|log.Lshortfile),
 		userRepo:    NewSQLUserRepository(db),
+		postRepo:    NewSQLPostRepository(db),
 		templateDir: "./templates",
 		publicPath:  "./public",
 		session:     session,
 	}
-	app.tp = NewTemplateRenderer(app.templateDir, false) // 2nd parameter isDev is for running in localdevf
+	app.tp = NewTemplateRenderer(app.templateDir, false) // 2nd parameter isDev is for running in localdev
 
 	log.Println("Listening on :8080")
 	if err := app.serve(); err != nil {
 		log.Fatal(err)
 	}
+
+	// TODO: Testing code to clean up later
+	// posts, meta, err := app.postRepo.GetAll(Filter{
+	// 	PageSize: 10,
+	// 	Page:     1,
+	// })
+	// if err != nil {
+	// 	log.Fatal(err)
+	// }
+	// fmt.Printf("posts : %+v\n", posts)
+	// fmt.Printf("meta : %+v\n", meta)
 }
 
 // connectToDatabase establishes a connection to the SQLite database and returns the database handle.
