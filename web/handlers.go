@@ -176,6 +176,65 @@ func (app *application) vote(w http.ResponseWriter, r *http.Request) {
 	http.Redirect(w, r, "/", http.StatusSeeOther)
 }
 
+func (app *application) comments(w http.ResponseWriter, r *http.Request) {
+	postID := app.readIntWithDefault(r, "post_id", 0)
+	u := app.getUserFromContext(r.Context())
+
+	post, err := app.postRepo.GetByID(postID)
+	if err != nil {
+		app.errorLog.Printf("error getting comments: %s\n", err.Error())
+		app.session.Put(r, "flash", "post not found")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	comments, err := app.postRepo.GetComments(postID)
+	if err != nil {
+		app.errorLog.Printf("error getting comments: %s\n", err.Error())
+		app.session.Put(r, "flash", "error getting comments")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	if r.Method == http.MethodPost {
+		if err := r.ParseForm(); err != nil {
+			http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
+			return
+		}
+
+		form := NewForm(r.PostForm)
+		form.Required("comment").
+			MinLength("comment", 5).
+			MaxLength("comment", 160)
+		if !form.Valid() {
+			form.Errors.Add("generic", "The data you submitted was not valid")
+			app.render(w, r, "comments.html", &templateData{
+				Form:     form,
+				Comments: comments,
+				Post:     post,
+			})
+			return
+		}
+
+		_, err := app.postRepo.AddComment(u.ID, post.ID, r.FormValue("comment"))
+		if err != nil {
+			app.errorLog.Printf("error adding comment: %s\n", err.Error())
+			app.session.Put(r, "flash", "error adding comment")
+			http.Redirect(w, r, fmt.Sprintf("/comments?post_id=%d", post.ID), http.StatusSeeOther)
+			return
+		}
+
+		http.Redirect(w, r, fmt.Sprintf("/comments?post_id=%d", post.ID), http.StatusSeeOther)
+		return
+	}
+
+	app.render(w, r, "comments.html", &templateData{
+		Form:     NewForm(r.PostForm),
+		Comments: comments,
+		Post:     post,
+	})
+}
+
 func (app *application) submit(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Printf("Received request for %s", r.URL.Path)
 	// POST request
