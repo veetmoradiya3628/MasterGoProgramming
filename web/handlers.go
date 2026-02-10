@@ -159,6 +159,23 @@ func (app *application) contact(w http.ResponseWriter, r *http.Request) {
 	app.render(w, r, "contact.html", nil)
 }
 
+func (app *application) vote(w http.ResponseWriter, r *http.Request) {
+	app.infoLog.Printf("Received request for %s", r.URL.Path)
+	postID := app.readIntWithDefault(r, "post_id", 0)
+	u := app.getUserFromContext(r.Context())
+
+	err := app.postRepo.AddVote(u.ID, postID)
+	if err != nil {
+		app.errorLog.Printf("error adding vote: %s\n", err.Error())
+		app.session.Put(r, "flash", "voting failed")
+		http.Redirect(w, r, "/", http.StatusSeeOther)
+		return
+	}
+
+	app.session.Put(r, "flash", fmt.Sprintf("You voted for post with id #%d", postID))
+	http.Redirect(w, r, "/", http.StatusSeeOther)
+}
+
 func (app *application) submit(w http.ResponseWriter, r *http.Request) {
 	app.infoLog.Printf("Received request for %s", r.URL.Path)
 	// POST request
