@@ -1,17 +1,47 @@
 package main
 
 import (
+	"fmt"
 	"net/http"
+	"strconv"
 )
 
 const (
 	loggedInUserKey = "logged_in_user_id"
 )
 
+func (app *application) readIntWithDefault(r *http.Request, key string, dvalue int) int {
+	v, err := strconv.Atoi(r.URL.Query().Get(key))
+	if err != nil {
+		return dvalue
+	}
+	return v
+}
 func (app *application) home(w http.ResponseWriter, r *http.Request) {
-	app.infoLog.Printf("Received request for %s", r.URL.Path)
-	// app.infoLog.Printf("Session data: %s", app.session.GetString(r, "userID"))
-	app.render(w, r, "index.html", nil)
+
+	filter := Filter{
+		Query:    r.URL.Query().Get("q"),
+		OrderBy:  r.URL.Query().Get("order_by"),
+		Page:     app.readIntWithDefault(r, "page", 1),
+		PageSize: app.readIntWithDefault(r, "page_size", 10),
+	}
+
+	posts, metadata, err := app.postRepo.GetAll(filter)
+	if err != nil {
+		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	app.infoLog.Printf("\nMetadata: %+v\n", metadata)
+
+	app.render(w, r, "index.html", &templateData{
+		Posts:    posts,
+		Metadata: metadata,
+		NextLink: fmt.Sprintf("/?q=%s&order_by=%s&page=%d&page_size=%d",
+			filter.Query, filter.OrderBy, metadata.NextPage, filter.PageSize),
+		PrevLink: fmt.Sprintf("/?q=%s&order_by=%s&page=%d&page_size=%d",
+			filter.Query, filter.OrderBy, metadata.PrevPage, filter.PageSize),
+	})
 }
 
 func (app *application) login(w http.ResponseWriter, r *http.Request) {
