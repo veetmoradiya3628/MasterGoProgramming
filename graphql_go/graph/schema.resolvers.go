@@ -14,36 +14,89 @@ import (
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+	todo := r.TodoStore.Create(input.Text)
+	return &model.Todo{
+		ID:        todo.ID,
+		Text:      todo.Text,
+		Done:      todo.Done,
+		CreatedAt: todo.CreatedAt,
+	}, nil
 }
 
 // UpdateTodo is the resolver for the updateTodo field.
 func (r *mutationResolver) UpdateTodo(ctx context.Context, id string, input model.UpdateTodo) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: UpdateTodo - updateTodo"))
+	todo := r.TodoStore.Update(id, &input.Text, input.Done)
+	if todo == nil {
+		return nil, fmt.Errorf("todo not found")
+	}
+	return &model.Todo{
+		ID:        todo.ID,
+		Text:      todo.Text,
+		Done:      todo.Done,
+		CreatedAt: todo.CreatedAt,
+	}, nil
 }
 
 // DeleteTodo is the resolver for the deleteTodo field.
 func (r *mutationResolver) DeleteTodo(ctx context.Context, id string) (bool, error) {
-	panic(fmt.Errorf("not implemented: DeleteTodo - deleteTodo"))
+	return r.TodoStore.Delete(id), nil
 }
 
 // ToggleTodo is the resolver for the toggleTodo field.
 func (r *mutationResolver) ToggleTodo(ctx context.Context, id string) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: ToggleTodo - toggleTodo"))
+	todo := r.TodoStore.Toggle(id)
+	if todo == nil {
+		return nil, fmt.Errorf("todo not found")
+	}
+	return &model.Todo{
+		ID:        todo.ID,
+		Text:      todo.Text,
+		Done:      todo.Done,
+		CreatedAt: todo.CreatedAt,
+	}, nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todos - todos"))
+	todos := r.TodoStore.GetAll()
+	result := make([]*model.Todo, len(todos))
+	for i, todo := range todos {
+		result[i] = &model.Todo{
+			ID:        todo.ID,
+			Text:      todo.Text,
+			Done:      todo.Done,
+			CreatedAt: todo.CreatedAt,
+		}
+	}
+	return result, nil
 }
 
-// Todo is the resolver for the todo field.
 func (r *queryResolver) Todo(ctx context.Context, id string) (*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: Todo - todo"))
+	todo := r.TodoStore.GetByID(id)
+	if todo == nil {
+		return nil, fmt.Errorf("todo not found")
+	}
+	return &model.Todo{
+		ID:        todo.ID,
+		Text:      todo.Text,
+		Done:      todo.Done,
+		CreatedAt: todo.CreatedAt,
+	}, nil
 }
 
 // TodosByStatus is the resolver for the todosByStatus field.
 func (r *queryResolver) TodosByStatus(ctx context.Context, done bool) ([]*model.Todo, error) {
-	panic(fmt.Errorf("not implemented: TodosByStatus - todosByStatus"))
+	todos := r.TodoStore.GetByStatus(done)
+	result := make([]*model.Todo, len(todos))
+	for i, todo := range todos {
+		result[i] = &model.Todo{
+			ID:        todo.ID,
+			Text:      todo.Text,
+			Done:      todo.Done,
+			CreatedAt: todo.CreatedAt,
+		}
+	}
+	return result, nil
 }
 
 // Mutation returns MutationResolver implementation.
