@@ -1,0 +1,42 @@
+# Read operations
+type Query {
+  # Get all todos
+  todos: [Todo!]!
+
+  # Get a specific tody by ID
+  todo(id: ID!): Todo
+
+  # Get todos filtered by completion status
+  todosByStatus(done: Boolean!):[Todo!]!
+}
+
+# Create / Update operations
+type Mutation {
+  # create a new todo
+  createTodo(input: NewTodo!):Todo!
+
+  # update an existing todo
+  updateTodo(id: ID!, input: UpdateTodo!): Todo
+
+  # Delete a todo
+  deleteTodo(id: ID!): Boolean!
+
+  # Toggle todo completion status
+  toggleTodo(id: ID!): Todo
+}
+
+type Todo {
+  id: ID!
+  text: String!
+  done: Boolean!
+  createdAt: String!
+}
+
+input NewTodo {
+  text: String!
+}
+
+input UpdateTodo {
+  text: String!
+  done: Boolean
+}
