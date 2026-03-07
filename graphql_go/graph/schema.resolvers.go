@@ -7,34 +7,43 @@ package graph
 
 import (
 	"context"
-	"fmt"
+	"strings"
 
+	"github.com/veetmoradiya3628/graph_go/errors"
 	"github.com/veetmoradiya3628/graph_go/graph/model"
 )
 
 // CreateTodo is the resolver for the createTodo field.
 func (r *mutationResolver) CreateTodo(ctx context.Context, input model.NewTodo) (*model.Todo, error) {
+	if len(strings.TrimSpace(input.Text)) == 0 {
+		return nil, &errors.ValidationError{
+			Field:   "text",
+			Message: "text cannot be empty",
+		}
+	}
+
+	if len(input.Text) > 255 {
+		return nil, &errors.ValidationError{
+			Field:   "text",
+			Message: "text cannot exceed 255 characters",
+		}
+	}
+
 	todo := r.TodoStore.Create(input.Text)
-	return &model.Todo{
-		ID:        todo.ID,
-		Text:      todo.Text,
-		Done:      todo.Done,
-		CreatedAt: todo.CreatedAt,
-	}, nil
+
+	return convertTodo(todo), nil
 }
 
 // UpdateTodo is the resolver for the updateTodo field.
 func (r *mutationResolver) UpdateTodo(ctx context.Context, id string, input model.UpdateTodo) (*model.Todo, error) {
-	todo := r.TodoStore.Update(id, &input.Text, input.Done)
+	todo := r.TodoStore.Update(id, input.Text, input.Done)
 	if todo == nil {
-		return nil, fmt.Errorf("todo not found")
+		return nil, &errors.NotFoundError{
+			Resource: "Todo",
+			ID:       id,
+		}
 	}
-	return &model.Todo{
-		ID:        todo.ID,
-		Text:      todo.Text,
-		Done:      todo.Done,
-		CreatedAt: todo.CreatedAt,
-	}, nil
+	return convertTodo(todo), nil
 }
 
 // DeleteTodo is the resolver for the deleteTodo field.
@@ -46,57 +55,38 @@ func (r *mutationResolver) DeleteTodo(ctx context.Context, id string) (bool, err
 func (r *mutationResolver) ToggleTodo(ctx context.Context, id string) (*model.Todo, error) {
 	todo := r.TodoStore.Toggle(id)
 	if todo == nil {
-		return nil, fmt.Errorf("todo not found")
+		return nil, &errors.NotFoundError{
+			Resource: "Todo",
+			ID:       id,
+		}
 	}
-	return &model.Todo{
-		ID:        todo.ID,
-		Text:      todo.Text,
-		Done:      todo.Done,
-		CreatedAt: todo.CreatedAt,
-	}, nil
+
+	return convertTodo(todo), nil
 }
 
 // Todos is the resolver for the todos field.
 func (r *queryResolver) Todos(ctx context.Context) ([]*model.Todo, error) {
-	todos := r.TodoStore.GetAll()
-	result := make([]*model.Todo, len(todos))
-	for i, todo := range todos {
-		result[i] = &model.Todo{
-			ID:        todo.ID,
-			Text:      todo.Text,
-			Done:      todo.Done,
-			CreatedAt: todo.CreatedAt,
-		}
-	}
-	return result, nil
+	return convertTodos(r.TodoStore.GetAll()), nil
 }
 
+// Todo is the resolver for the todo field.
 func (r *queryResolver) Todo(ctx context.Context, id string) (*model.Todo, error) {
 	todo := r.TodoStore.GetByID(id)
+
 	if todo == nil {
-		return nil, fmt.Errorf("todo not found")
+		return nil, &errors.NotFoundError{
+			Resource: "Todo",
+			ID:       id,
+		}
 	}
-	return &model.Todo{
-		ID:        todo.ID,
-		Text:      todo.Text,
-		Done:      todo.Done,
-		CreatedAt: todo.CreatedAt,
-	}, nil
+
+	return convertTodo(todo), nil
 }
 
 // TodosByStatus is the resolver for the todosByStatus field.
 func (r *queryResolver) TodosByStatus(ctx context.Context, done bool) ([]*model.Todo, error) {
 	todos := r.TodoStore.GetByStatus(done)
-	result := make([]*model.Todo, len(todos))
-	for i, todo := range todos {
-		result[i] = &model.Todo{
-			ID:        todo.ID,
-			Text:      todo.Text,
-			Done:      todo.Done,
-			CreatedAt: todo.CreatedAt,
-		}
-	}
-	return result, nil
+	return convertTodos(todos), nil
 }
 
 // Mutation returns MutationResolver implementation.

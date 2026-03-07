@@ -20,6 +20,6 @@ type Todo struct {
 }
 
 type UpdateTodo struct {
-	Text string `json:"text"`
-	Done *bool  `json:"done,omitempty"`
+	Text *string `json:"text,omitempty"`
+	Done *bool   `json:"done,omitempty"`
 }
