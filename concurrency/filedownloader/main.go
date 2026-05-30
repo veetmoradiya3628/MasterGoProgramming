@@ -11,6 +11,10 @@ import (
 	"time"
 )
 
+/*
+DownloadFile downloads a file from the given URL and saves it to the specified destination directory. It extracts the filename from the URL, creates a file in the destination directory, and then performs an HTTP GET request to download the file.
+The function handles errors appropriately, ensuring that any partially downloaded files are removed if an error occurs during the download process.
+*/
 func DownloadFile(url, destDir string) error {
 	filename := filepath.Base(url)
 	filePath := filepath.Join(destDir, filename) // .downloads/sample.txt
@@ -42,6 +46,11 @@ func DownloadFile(url, destDir string) error {
 	return nil
 }
 
+/*
+SequentialDownloader downloads files from the given URLs sequentially.
+It creates a directory for the downloaded files, iterates over the URLs, and calls the DownloadFile function for each URL.
+The total time taken for all downloads is printed at the end.
+*/
 func SequentialDownloader(urls []string, destDir string) error {
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return err
@@ -65,22 +74,28 @@ type Result struct {
 	Error    error
 }
 
+/*
+ConcurrentDownloader downloads files from the given URLs concurrently with a limit on the maximum number of concurrent downloads.
+It creates a directory for the downloaded files, starts a goroutine for each URL to download the file, and uses a channel to collect the results.
+A WaitGroup is used to wait for all download goroutines to finish, and a limiter channel is used to control the number of concurrent downloads.
+The results are printed as they are received, and any errors are collected and printed at the end.
+*/
 func ConcurrentDownloader(urls []string, destDir string, maxConcurrent int) error {
 	if err := os.MkdirAll(destDir, 0755); err != nil {
 		return err
 	}
 	results := make(chan Result)
 	var wg sync.WaitGroup
-	limiter := make(chan struct{}, maxConcurrent)
+	limiter := make(chan struct{}, maxConcurrent) // limiter channel to control the number of concurrent downloads
 	for _, url := range urls {
 		wg.Add(1)
 		go func(url string) {
 			defer wg.Done()
 
-			limiter <- struct{}{}
+			limiter <- struct{}{} // Acquire a slot in the limiter channel
 			defer func() {
 				<-limiter
-			}()
+			}() // Release the slot in the limiter channel when the download is done
 
 			start := time.Now()
 			filename := filepath.Base(url)

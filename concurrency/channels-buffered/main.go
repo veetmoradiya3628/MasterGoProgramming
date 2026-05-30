@@ -9,6 +9,8 @@ func main() {
 	messages <- "Hello 2"
 	messages <- "Hello 3"
 
+	// messages <- "Hello testing which should not come here" // This will block until there is space in the buffer
+
 	fmt.Println(<-messages)
 	fmt.Println(<-messages)
 	fmt.Println(<-messages)

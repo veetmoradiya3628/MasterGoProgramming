@@ -9,13 +9,13 @@ import (
 
 type BankAccount struct {
 	balance int
-	mutex   sync.Mutex
+	mutex   sync.Mutex // mutex to protect balance
 }
 
 func (b *BankAccount) Deposit(amount int) {
-	b.mutex.Lock()
+	b.mutex.Lock() // lock the mutex before modifying the balance
 	b.balance += amount
-	b.mutex.Unlock()
+	b.mutex.Unlock() // unlock the mutex after modifying the balance
 	fmt.Println("Balance after deposit : ", b.balance)
 }
 
@@ -24,31 +24,31 @@ func (b *BankAccount) Withdraw(amount int) {
 		fmt.Println("Insufficient funds")
 		return
 	}
-	b.mutex.Lock()
+	b.mutex.Lock() // lock the mutex before modifying the balance
 	b.balance -= amount
-	b.mutex.Unlock()
+	b.mutex.Unlock() // unlock the mutex after modifying the balance
 	fmt.Println("Balance after withdraw : ", b.balance)
 }
 
 func (b *BankAccount) Balance() int {
-	b.mutex.Lock()
+	b.mutex.Lock() // lock the mutex before reading the balance
 	balance := b.balance
-	b.mutex.Unlock()
+	b.mutex.Unlock() // unlock the mutex after reading the balance
 	return balance
 }
 
 func main() {
 	counter := 0 // critical section
 	var wg sync.WaitGroup
-	var mutex sync.Mutex
+	var mutex sync.Mutex // mutex to protect the counter
 
 	for i := 0; i < 10000; i++ {
 		wg.Add(1)
 		go func() {
 			defer wg.Done()
-			mutex.Lock()
+			mutex.Lock() // lock the mutex before modifying the counter
 			counter++
-			mutex.Unlock()
+			mutex.Unlock() // unlock the mutex after modifying the counter
 		}()
 	}
 

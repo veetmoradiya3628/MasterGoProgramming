@@ -7,8 +7,8 @@ import (
 
 func main() {
 	jobs := make(chan int, 5)
-	var wg sync.WaitGroup
-	wg.Add(1)
+	var wg sync.WaitGroup // wg is used to wait for the goroutine to finish processing the jobs
+	wg.Add(1)             // Increment the WaitGroup counter by 1 for the goroutine that will process the jobs
 
 	go func(wg *sync.WaitGroup) {
 		defer wg.Done()
@@ -31,6 +31,9 @@ func main() {
 	wg.Wait()
 }
 
+// This function demonstrates the concept of closing a channel and how it affects the receiving end.
+// It creates a channel for jobs, starts a goroutine to process those jobs, and then sends a few jobs before closing the channel.
+// The goroutine will detect when the channel is closed and will exit gracefully.
 func doubleChannelConcept() {
 	jobs := make(chan int, 5)
 	done := make(chan bool)
